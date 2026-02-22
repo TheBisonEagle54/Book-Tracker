@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reading Tracker</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Quicksand', sans-serif;
+}
+
+body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    padding: 50px;
+}
+
+.wrapper {
+    max-width: 1000px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 32px;
+}
+
+/* Dashboard */
+.dashboard {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat {
+    flex: 1;
+    background: #0a0a0a;
+    border: 1px solid #111;
+    padding: 25px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.stat h2 {
+    margin: 0;
+    font-size: 36px;
+    color: #0077ff;
+}
+
+.stat p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #888;
+}
+
+.star-icons {
+    font-size: 22px;
+}
+
+/* Inputs */
+.add-category {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 35px;
+}
+
+input {
+    flex: 1;
+    padding: 14px;
+    background: #0a0a0a;
+    border: 1px solid #111;
+    color: white;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #0077ff;
+}
+
+button {
+    padding: 14px 20px;
+    background: #0077ff;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #005fd1;
+}
+
+/* Category Card */
+.category-card {
+    background: #0a0a0a;
+    border: 1px solid #111;
+    padding: 25px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.category-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.category-progress {
+    font-size: 13px;
+    color: #aaa;
+    opacity: 0.7;
+    margin-left: 6px;
+}
+
+/* Books */
+.book {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    font-size: 16px;
+}
+
+.book.done span {
+    text-decoration: line-through;
+    color: #666;
+}
+
+/* Checkbox */
+.book input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #0077ff;
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.book input[type="checkbox"]:checked {
+    background: #0077ff;
+    box-shadow: 0 0 6px #0077ff88;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    color: #ff1a1a;
+}
+
+.add-book {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<h1>📚 Reading Tracker</h1>
+
+<div class="dashboard">
+    <div class="stat">
+        <h2 id="totalBooks">0</h2>
+        <p>Total Books Read</p>
+    </div>
+
+    <div class="stat">
+        <h2 id="totalBadges">0</h2>
+        <p>Badges</p>
+    </div>
+
+    <div class="stat">
+        <div id="totalStars" class="star-icons"></div>
+        <p>Total Stars</p>
+    </div>
+</div>
+
+<div class="add-category">
+    <input type="text" id="categoryInput" placeholder="Add book category..."
+           onkeypress="if(event.key==='Enter') addCategory()">
+    <button onclick="addCategory()">Add</button>
+</div>
+
+<div id="categories"></div>
+
+</div>
+
+<script>
+let categories = [];
+
+if (localStorage.getItem("readingData")) {
+    categories = JSON.parse(localStorage.getItem("readingData"));
+}
+
+function saveData() {
+    localStorage.setItem("readingData", JSON.stringify(categories));
+}
+
+function addCategory() {
+    const name = document.getElementById("categoryInput").value.trim();
+    if (!name) return;
+
+    categories.push({
+        name,
+        books: [],
+        collapsed: false
+    });
+
+    document.getElementById("categoryInput").value = "";
+    saveData();
+    render();
+}
+
+function addBook(i) {
+    const input = document.getElementById("bookInput"+i);
+    const value = input.value.trim();
+    if (!value) return;
+
+    categories[i].books.push({ title: value, done: false });
+    input.value = "";
+    saveData();
+    render();
+}
+
+function toggleBook(i,j,checkbox) {
+    categories[i].books[j].done = checkbox.checked;
+    saveData();
+    render();
+}
+
+function removeBook(i,j) {
+    categories[i].books.splice(j,1);
+    saveData();
+    render();
+}
+
+function removeCategory(i) {
+    categories.splice(i,1);
+    saveData();
+    render();
+}
+
+function toggleCollapse(i) {
+    categories[i].collapsed = !categories[i].collapsed;
+    saveData();
+    render();
+}
+
+function render() {
+
+    const totalRead = categories.reduce((sum,cat) =>
+        sum + cat.books.filter(b=>b.done).length,0);
+
+    const totalStars = categories.reduce((sum,cat)=>{
+        const readCount = cat.books.filter(b=>b.done).length;
+        return sum + Math.floor(readCount/10);
+    },0);
+
+    document.getElementById("totalBooks").innerText = totalRead;
+    document.getElementById("totalBadges").innerText = totalRead;
+    document.getElementById("totalStars").innerHTML = "⭐ ".repeat(totalStars);
+
+    const container = document.getElementById("categories");
+    container.innerHTML = "";
+
+    categories.forEach((cat,i)=>{
+
+        const readCount = cat.books.filter(b=>b.done).length;
+        const stars = Math.floor(readCount/10);
+
+        const card = document.createElement("div");
+        card.className = "category-card";
+
+        card.innerHTML = `
+            <div class="category-header" onclick="toggleCollapse(${i})">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <span>${cat.collapsed ? "▸" : "▾"}</span>
+                    <h3>
+                        ${cat.name}
+                        <span class="category-progress">
+                            (${readCount}/${cat.books.length})
+                        </span>
+                    </h3>
+                </div>
+                <div>
+                    ${"⭐ ".repeat(stars)}
+                    <button class="delete-btn"
+                        onclick="event.stopPropagation(); removeCategory(${i})">
+                        ✕
+                    </button>
+                </div>
+            </div>
+        `;
+
+        if (!cat.collapsed) {
+
+            card.innerHTML += `
+                <div class="add-book">
+                    <input type="text" id="bookInput${i}"
+                        placeholder="Add book title..."
+                        onkeypress="if(event.key==='Enter') addBook(${i})">
+                    <button onclick="addBook(${i})">Add</button>
+                </div>
+            `;
+
+            cat.books.forEach((book,j)=>{
+                const row = document.createElement("div");
+                row.className = "book " + (book.done ? "done":"");
+
+                row.innerHTML = `
+                    <span>${book.title}</span>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <input type="checkbox"
+                            ${book.done ? "checked":""}
+                            onchange="toggleBook(${i},${j},this)">
+                        <button class="delete-btn"
+                            onclick="removeBook(${i},${j})">✕</button>
+                    </div>
+                `;
+                card.appendChild(row);
+            });
+        }
+
+        container.appendChild(card);
+    });
+}
+
+render();
+</script>
+
+</body>
+</html>
