@@ -27,10 +27,8 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 40px;
-    font-size: 32px;
 }
 
-/* Dashboard */
 .dashboard {
     display: flex;
     gap: 25px;
@@ -98,7 +96,7 @@ button:hover {
     background: #005fd1;
 }
 
-/* Category Card */
+/* Category */
 .category-card {
     background: #0a0a0a;
     border: 1px solid #111;
@@ -114,11 +112,6 @@ button:hover {
     cursor: pointer;
 }
 
-.category-header h3 {
-    margin: 0;
-    font-size: 20px;
-}
-
 .category-progress {
     font-size: 13px;
     color: #aaa;
@@ -126,13 +119,11 @@ button:hover {
     margin-left: 6px;
 }
 
-/* Books */
 .book {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 12px;
-    font-size: 16px;
 }
 
 .book.done span {
@@ -140,7 +131,6 @@ button:hover {
     color: #666;
 }
 
-/* Checkbox */
 .book input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
@@ -150,7 +140,6 @@ button:hover {
     border-radius: 3px;
     background: transparent;
     cursor: pointer;
-    transition: 0.15s;
 }
 
 .book input[type="checkbox"]:checked {
@@ -163,17 +152,12 @@ button:hover {
     border: none;
     color: #ff4d4d;
     cursor: pointer;
-    font-size: 14px;
-}
-
-.delete-btn:hover {
-    color: #ff1a1a;
 }
 
 .add-book {
     display: flex;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 15px;
 }
 </style>
 </head>
@@ -272,17 +256,21 @@ function toggleCollapse(i) {
     render();
 }
 
+function calculateStars(totalRead) {
+    if (totalRead >= 150) return 5;
+    if (totalRead >= 100) return 4;
+    if (totalRead >= 60) return 3;
+    if (totalRead >= 30) return 2;
+    if (totalRead >= 10) return 1;
+    return 0;
+}
+
 function render() {
 
     const totalRead = categories.reduce((sum,cat) =>
         sum + cat.books.filter(b=>b.done).length,0);
 
-    let totalStars = 0;
-    if (totalRead >= 10) totalStars = 1;
-    if (totalRead >= 30) totalStars = 2;
-    if (totalRead >= 60) totalStars = 3;
-    if (totalRead >= 100) totalStars = 4;
-    if (totalRead >= 150) totalStars = 5;
+    const totalStars = calculateStars(totalRead);
 
     document.getElementById("totalBooks").innerText = totalRead;
     document.getElementById("totalBadges").innerText = totalRead;
@@ -309,12 +297,10 @@ function render() {
                         </span>
                     </h3>
                 </div>
-                <div>
-                    <button class="delete-btn"
-                        onclick="event.stopPropagation(); removeCategory(${i})">
-                        ✕
-                    </button>
-                </div>
+                <button class="delete-btn"
+                    onclick="event.stopPropagation(); removeCategory(${i})">
+                    ✕
+                </button>
             </div>
         `;
 
