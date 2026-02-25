@@ -7,10 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
-* {
-    box-sizing: border-box;
-    font-family: 'Quicksand', sans-serif;
-}
+* { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
 
 body {
     margin: 0;
@@ -19,15 +16,9 @@ body {
     padding: 50px;
 }
 
-.wrapper {
-    max-width: 1000px;
-    margin: auto;
-}
+.wrapper { max-width: 1000px; margin: auto; }
 
-h1 {
-    text-align: center;
-    margin-bottom: 40px;
-}
+h1 { text-align: center; margin-bottom: 40px; }
 
 .dashboard {
     display: flex;
@@ -56,8 +47,13 @@ h1 {
     color: #888;
 }
 
-.star-icons {
-    font-size: 22px;
+.star-icons { font-size: 22px; }
+
+.progress-text {
+    font-size: 13px;
+    color: #aaa;
+    opacity: 0.8;
+    margin-top: 6px;
 }
 
 /* Inputs */
@@ -78,9 +74,7 @@ input {
     outline: none;
 }
 
-input:focus {
-    border-color: #0077ff;
-}
+input:focus { border-color: #0077ff; }
 
 button {
     padding: 14px 20px;
@@ -92,9 +86,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: #005fd1;
-}
+button:hover { background: #005fd1; }
 
 /* Category */
 .category-card {
@@ -182,6 +174,7 @@ button:hover {
     <div class="stat">
         <div id="totalStars" class="star-icons"></div>
         <p>Stars</p>
+        <div id="nextStar" class="progress-text"></div>
     </div>
 </div>
 
@@ -206,16 +199,24 @@ function saveData() {
     localStorage.setItem("readingData", JSON.stringify(categories));
 }
 
+function getMilestones() {
+    return [10, 30, 60, 100, 150];
+}
+
+function calculateStars(totalRead) {
+    const milestones = getMilestones();
+    let stars = 0;
+    for (let i = 0; i < milestones.length; i++) {
+        if (totalRead >= milestones[i]) stars = i + 1;
+    }
+    return stars;
+}
+
 function addCategory() {
     const name = document.getElementById("categoryInput").value.trim();
     if (!name) return;
 
-    categories.push({
-        name,
-        books: [],
-        collapsed: false
-    });
-
+    categories.push({ name, books: [], collapsed: false });
     document.getElementById("categoryInput").value = "";
     saveData();
     render();
@@ -256,25 +257,27 @@ function toggleCollapse(i) {
     render();
 }
 
-function calculateStars(totalRead) {
-    if (totalRead >= 150) return 5;
-    if (totalRead >= 100) return 4;
-    if (totalRead >= 60) return 3;
-    if (totalRead >= 30) return 2;
-    if (totalRead >= 10) return 1;
-    return 0;
-}
-
 function render() {
 
     const totalRead = categories.reduce((sum,cat) =>
         sum + cat.books.filter(b=>b.done).length,0);
 
     const totalStars = calculateStars(totalRead);
+    const milestones = getMilestones();
 
     document.getElementById("totalBooks").innerText = totalRead;
     document.getElementById("totalBadges").innerText = totalRead;
     document.getElementById("totalStars").innerHTML = "⭐ ".repeat(totalStars);
+
+    const nextMilestone = milestones.find(m => totalRead < m);
+
+    if (nextMilestone) {
+        document.getElementById("nextStar").innerText =
+            `${totalRead} / ${nextMilestone} toward ⭐${calculateStars(nextMilestone)}`;
+    } else {
+        document.getElementById("nextStar").innerText =
+            "Maximum Stars Achieved ⭐⭐⭐⭐⭐";
+    }
 
     const container = document.getElementById("categories");
     container.innerHTML = "";
